@@ -1,3 +1,7 @@
 <?php
-echo "Requested URL: " . $_SERVER['REQUEST_URI'];
-phpinfo();
+require '../vendor/autoload.php';
+
+$uri = trim($_SERVER['REQUEST_URI'], '/');
+
+$router = new App\PatternRouter();
+$router->route($uri);
