@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     profile_photo VARCHAR(255),
     dietary_preferences TEXT,
     allergies TEXT,
+    is_admin TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX (email)
@@ -176,3 +177,433 @@ CREATE TABLE IF NOT EXISTS shopping_list_items (
     INDEX (shopping_list_id),
     INDEX (ingredient_id)
 );
+
+-- ===========================
+-- SAMPLE DATA - INGREDIENTS
+-- ===========================
+-- Note: This data has been AI-generated for testing purposes
+
+INSERT INTO ingredients (name, calories, protein, carbs, fat) VALUES
+-- ===========================
+-- VEGETABLES
+-- ===========================
+('Onion', 40, 1.1, 9.3, 0.1),
+('Garlic', 149, 6.4, 33.1, 0.5),
+('Bell Pepper', 31, 1.0, 6.0, 0.3),
+('Tomato', 18, 0.9, 3.9, 0.2),
+('Cucumber', 16, 0.7, 3.6, 0.1),
+('Carrot', 41, 0.9, 9.6, 0.2),
+('Broccoli', 34, 2.8, 6.6, 0.4),
+('Cauliflower', 25, 1.9, 5.0, 0.3),
+('Spinach', 23, 2.9, 3.6, 0.4),
+('Zucchini', 17, 1.2, 3.1, 0.3),
+('Mushrooms', 22, 3.1, 3.3, 0.3),
+('Eggplant', 25, 1.0, 6.0, 0.2),
+
+-- ===========================
+-- FRUIT
+-- ===========================
+('Apple', 52, 0.3, 14.0, 0.2),
+('Banana', 89, 1.1, 22.8, 0.3),
+('Lemon', 29, 1.1, 9.3, 0.3),
+('Avocado', 160, 2.0, 8.5, 14.7),
+('Strawberries', 32, 0.7, 7.7, 0.3),
+
+-- ===========================
+-- GRAINS & RICE
+-- ===========================
+('White Rice', 130, 2.7, 28.0, 0.3),
+('Brown Rice', 123, 2.7, 25.6, 1.0),
+('Pasta', 131, 5.0, 25.0, 1.1),
+('Whole Wheat Pasta', 124, 5.5, 26.0, 1.2),
+('Quinoa', 120, 4.4, 21.3, 1.9),
+('Couscous', 112, 3.8, 23.2, 0.2),
+('Oatmeal', 389, 16.9, 66.3, 6.9),
+
+-- ===========================
+-- MEAT & FISH
+-- ===========================
+('Chicken Breast', 165, 31.0, 0.0, 3.6),
+('Ground Beef', 250, 26.0, 0.0, 20.0),
+('Pork Loin', 143, 26.0, 0.0, 3.5),
+('Salmon', 208, 20.0, 0.0, 13.0),
+('Canned Tuna', 116, 26.0, 0.0, 1.0),
+('Shrimp', 99, 24.0, 0.2, 0.3),
+
+-- ===========================
+-- PLANT-BASED PROTEINS
+-- ===========================
+('Tofu', 76, 8.0, 1.9, 4.8),
+('Tempeh', 193, 20.0, 9.0, 11.0),
+('Chickpeas', 164, 8.9, 27.4, 2.6),
+('Lentils', 116, 9.0, 20.0, 0.4),
+('Black Beans', 132, 8.9, 23.7, 0.5),
+
+-- ===========================
+-- DAIRY & EGGS
+-- ===========================
+('Milk', 42, 3.4, 5.0, 1.0),
+('Full-fat Yogurt', 61, 3.5, 4.7, 3.3),
+('Low-fat Quark', 59, 10.0, 3.9, 0.4),
+('Cheese', 402, 25.0, 1.3, 33.0),
+('Egg', 155, 13.0, 1.1, 11.0),
+('Butter', 717, 0.9, 0.1, 81.0),
+
+-- ===========================
+-- OILS & FATS
+-- ===========================
+('Olive Oil', 884, 0.0, 0.0, 100.0),
+('Sunflower Oil', 884, 0.0, 0.0, 100.0),
+('Coconut Oil', 862, 0.0, 0.0, 100.0),
+
+-- ===========================
+-- SPICES & SAUCES
+-- ===========================
+('Salt', 0, 0.0, 0.0, 0.0),
+('Black Pepper', 251, 10.4, 64.0, 3.3),
+('Paprika Powder', 282, 14.1, 54.0, 12.9),
+('Soy Sauce', 53, 8.1, 4.9, 0.6),
+('Tomato Paste', 82, 4.3, 18.9, 0.5),
+('Honey', 304, 0.3, 82.4, 0.0),
+('Bread', 265, 9.0, 49.0, 3.3);
+
+-- ===========================
+-- SAMPLE DATA - CATEGORIES
+-- ===========================
+-- Note: This data has been AI-generated for testing purposes
+
+INSERT INTO categories (name, description, icon) VALUES
+-- Meal Type
+('Breakfast', 'Meals suitable for breakfast', 'breakfast'),
+('Lunch', 'Midday meals, light but nutritious', 'lunch'),
+('Dinner', 'Full warm meals for the evening', 'dinner'),
+('Snack', 'Small meals or snacks', 'snack'),
+
+-- Diet Type
+('Vegetarian', 'Meals without meat or fish', 'leaf'),
+('Vegan', 'Fully plant-based meals', 'plant'),
+('Fish', 'Meals with fish or seafood', 'fish'),
+('Meat', 'Meals with meat', 'meat'),
+
+-- Macro Focus
+('High Protein', 'Meals with high protein content', 'protein'),
+('Low Carb', 'Meals with few carbohydrates', 'low-carb'),
+('High Carb', 'Meals with many carbohydrates', 'carbs'),
+
+-- General Categories
+('Healthy', 'Balanced meals for daily use', 'healthy'),
+('Comfort Food', 'Rich and filling meals', 'comfort'),
+('Quick Meal', 'Meals that are quick to prepare', 'fast'),
+('Meal Prep', 'Meals suitable for advance preparation', 'meal-prep');
+
+-- ===========================
+-- SAMPLE DATA - TAGS
+-- ===========================
+-- Note: This data has been AI-generated for testing purposes
+
+INSERT INTO tags (name, description) VALUES
+-- ===========================
+-- DIET & LIFESTYLE
+-- ===========================
+('Vegetarian', 'Contains no meat or fish'),
+('Vegan', 'Fully plant-based'),
+('Pescatarian', 'Contains fish but no meat'),
+('Gluten-free', 'Contains no gluten'),
+('Dairy-free', 'Contains no dairy'),
+('Nut-free', 'Contains no nuts'),
+('Sugar-free', 'Without added sugars'),
+('Low Carb', 'Low in carbohydrates'),
+('Keto', 'Very low carb, high fat'),
+('High Protein', 'High protein content'),
+('Low Calorie', 'Low in calories'),
+('Healthy', 'Balanced nutritional value'),
+
+-- ===========================
+-- MEAL TYPE
+-- ===========================
+('Breakfast', 'Suitable as breakfast'),
+('Lunch', 'Suitable as lunch'),
+('Dinner', 'Suitable as dinner'),
+('Snack', 'Suitable as a snack'),
+('Meal Prep', 'Suitable for advance preparation'),
+('Quick Meal', 'Ready within 30 minutes'),
+
+-- ===========================
+-- CUISINES / STYLES
+-- ===========================
+('Italian', 'Italian cuisine'),
+('Asian', 'Asian cuisine'),
+('Mexican', 'Mexican cuisine'),
+('Mediterranean', 'Mediterranean cuisine'),
+('Oriental', 'Oriental flavors'),
+('Dutch', 'Traditional Dutch dishes'),
+('American', 'American cuisine'),
+('Indian', 'Indian cuisine'),
+
+-- ===========================
+-- FLAVOR PROFILE
+-- ===========================
+('Spicy', 'Spicy flavor'),
+('Sweet', 'Sweet dishes'),
+('Savory', 'Savory flavor'),
+('Sour', 'Fresh sour taste'),
+('Umami', 'Rich umami flavor'),
+
+-- ===========================
+-- COOKING & CHARACTERISTICS
+-- ===========================
+('Oven', 'Prepared in the oven'),
+('Pan', 'Prepared in a pan'),
+('Grill', 'Prepared on the grill'),
+('Air Fryer', 'Suitable for air fryer'),
+('One-Pot', 'Everything in one pot'),
+('Budget-friendly', 'Budget-friendly meal'),
+('Kid-friendly', 'Suitable for children'),
+('Festive', 'Suitable for special occasions'),
+
+-- ===========================
+-- SEASONS & MOMENTS
+-- ===========================
+('Summer', 'Light meals for summer'),
+('Winter', 'Warm meals for winter'),
+('Autumn', 'Seasonal autumn dishes'),
+('Spring', 'Fresh spring dishes'),
+('Holidays', 'Suitable for holidays'),
+
+-- ===========================
+-- GOALS
+-- ===========================
+('Weight Loss', 'Suitable for weight loss'),
+('Muscle Building', 'Suitable for muscle building'),
+('Energy Boost', 'Provides sustained energy');
+
+-- ===========================
+-- SAMPLE DATA - RECIPES
+-- ===========================
+-- Note: This data has been AI-generated for testing purposes
+-- Category IDs: Breakfast=1, Lunch=2, Dinner=3, Snack=4
+
+INSERT INTO recipes (title, description, instructions, image_url, prep_time, cook_time, servings, difficulty, category_id) VALUES
+-- ===========================
+-- BREAKFAST RECIPES
+-- ===========================
+('Oatmeal with Banana and Honey',
+'Creamy oatmeal with banana and honey',
+'Bring the milk to a boil in a saucepan. Add the oatmeal and let it simmer gently for 5 to 7 minutes while stirring until a creamy porridge forms. Meanwhile, slice the banana. Remove the pan from the heat and stir the honey into the oatmeal. Serve with banana slices on top.',
+'oatmeal_banana.jpg', 5, 10, 1, 'Easy', 1),
+
+('Greek Yogurt with Strawberries',
+'Fresh yogurt with fresh fruit',
+'Wash the strawberries and cut them into pieces. Scoop the Greek yogurt into a bowl and add the strawberries. Mix gently or serve layered. Optionally you can add honey or nuts.',
+'yogurt_strawberry.jpg', 5, 0, 1, 'Easy', 1),
+
+('Omelet with Spinach',
+'Fluffy omelet with fresh spinach',
+'Break the eggs into a bowl and whisk them with a pinch of salt and pepper. Heat a pan with a little oil or butter. Fry the spinach briefly until wilted. Pour the egg mixture in and cook the omelet on low heat until done.',
+'omelet_spinach.jpg', 5, 8, 1, 'Easy', 1),
+
+('Avocado Toast',
+'Whole grain toast with avocado',
+'Toast the bread until golden brown. Halve the avocado, remove the pit and mash the flesh with a fork. Season with salt and pepper. Spread the avocado over the toast and serve immediately.',
+'avocado_toast.jpg', 5, 5, 1, 'Easy', 1),
+
+('Smoothie Bowl',
+'Thick smoothie with fruit',
+'Put the fruit together with a splash of milk or yogurt into a blender. Blend until a thick smoothie forms. Pour the smoothie into a bowl and garnish with fresh fruit or seeds if desired.',
+'smoothie_bowl.jpg', 10, 0, 1, 'Easy', 1),
+
+-- ===========================
+-- LUNCH RECIPES
+-- ===========================
+('Chicken Salad',
+'Fresh salad with grilled chicken',
+'Season the chicken breast with salt and pepper and grill it in a pan until cooked. Let it rest briefly and slice into pieces. Chop the vegetables of your choice and mix them in a bowl. Add the chicken and mix everything with a dressing of your choice.',
+'chicken_salad.jpg', 10, 10, 2, 'Easy', 2),
+
+('Pasta Pesto',
+'Quick pasta with pesto',
+'Bring a pot of water to a boil and cook the pasta according to package instructions. Drain and save a small cup of cooking water. Mix the pasta with the pesto and add some cooking water if desired for extra creaminess.',
+'pasta_pesto.jpg', 5, 12, 2, 'Easy', 2),
+
+('Wrap with Hummus and Vegetables',
+'Vegetarian wrap',
+'Warm the wrap briefly in a pan. Spread the wrap with hummus. Cut the vegetables into thin strips and distribute over the wrap. Roll tightly and cut in half if desired.',
+'wrap_hummus.jpg', 10, 0, 1, 'Easy', 2),
+
+('Tomato Soup',
+'Classic tomato soup',
+'Chop the onion and fry it in a pan. Add the tomatoes and let simmer gently for 15 minutes. Puree the soup with an immersion blender and season with salt and pepper.',
+'tomato_soup.jpg', 10, 20, 2, 'Medium', 2),
+
+-- ===========================
+-- DINNER RECIPES
+-- ===========================
+('Spaghetti Bolognese',
+'Classic Italian pasta',
+'Cook the spaghetti according to package instructions. Chop the onion and fry it with the ground beef until crumbled. Add tomato sauce and simmer for 20 minutes. Season with herbs. Serve the sauce over the spaghetti.',
+'spaghetti_bolognese.jpg', 10, 30, 4, 'Medium', 3),
+
+('Salmon with Rice and Broccoli',
+'Healthy meal with fish',
+'Cook the rice according to package instructions. Steam or cook the broccoli until tender-crisp. Fry the salmon in a pan with some oil until golden brown and cooked through. Serve everything together.',
+'salmon_rice.jpg', 10, 20, 2, 'Medium', 3),
+
+('Vegetarian Curry',
+'Spicy curry with vegetables',
+'Chop the vegetables. Fry them in a pan with curry paste. Add coconut milk and simmer gently for 20 minutes. Serve with rice.',
+'veg_curry.jpg', 15, 25, 3, 'Medium', 3),
+
+('Chicken Stir-fry',
+'Quick Asian stir-fry',
+'Cut the chicken into pieces and fry it in a hot pan. Add vegetables and stir-fry briefly. Add soy sauce and serve with rice or noodles.',
+'chicken_stirfry.jpg', 10, 15, 2, 'Easy', 3),
+
+('Lasagne',
+'Oven dish with pasta and sauce',
+'Preheat the oven to 180°C. Brown the ground beef and add tomato sauce. Layer sauce, lasagne noodles and cheese if desired. Bake for 40 minutes in the oven.',
+'lasagne.jpg', 20, 40, 4, 'Hard', 3),
+
+-- ===========================
+-- SNACK RECIPES
+-- ===========================
+('Fruit Mix',
+'Healthy fruit snack',
+'Wash and chop different types of fruit. Mix everything in a bowl and serve immediately.',
+'fruit_mix.jpg', 5, 0, 1, 'Easy', 4),
+
+('Boiled Egg',
+'Protein-rich snack',
+'Bring water to a boil. Add the egg and cook for 7 minutes. Shock in cold water and peel the egg.',
+'boiled_egg.jpg', 2, 7, 1, 'Easy', 4),
+
+('Hummus with Carrot',
+'Creamy hummus with raw vegetables',
+'Peel the carrots and cut into strips. Serve together with hummus.',
+'hummus_carrot.jpg', 5, 0, 2, 'Easy', 4);
+
+-- ===========================
+-- SAMPLE DATA - RECIPE INGREDIENTS
+-- ===========================
+-- Mapping: Ingredient IDs adjusted to match our 51-ingredient database
+
+INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES
+
+-- ===========================
+-- BREAKFAST RECIPES
+-- ===========================
+(1, 24, 50, 'grams'),    -- Oatmeal
+(1, 36, 200, 'ml'),      -- Milk
+(1, 14, 1, 'piece'),     -- Banana
+(1, 50, 15, 'grams'),    -- Honey
+
+(2, 37, 200, 'grams'),   -- Full-fat Yogurt
+(2, 17, 100, 'grams'),   -- Strawberries
+
+(3, 40, 2, 'pieces'),    -- Egg
+(3, 9, 50, 'grams'),     -- Spinach
+(3, 41, 5, 'grams'),     -- Butter
+
+(4, 16, 1, 'piece'),     -- Avocado
+(4, 51, 2, 'slices'),    -- Bread
+
+(5, 14, 1, 'piece'),     -- Banana
+(5, 17, 100, 'grams'),   -- Strawberries
+(5, 36, 100, 'ml'),      -- Milk
+
+-- ===========================
+-- LUNCH RECIPES
+-- ===========================
+(6, 25, 200, 'grams'),   -- Chicken Breast
+(6, 4, 100, 'grams'),    -- Tomato
+(6, 5, 50, 'grams'),     -- Cucumber
+(6, 42, 10, 'ml'),       -- Olive Oil
+
+(7, 20, 200, 'grams'),   -- Pasta
+(7, 42, 15, 'ml'),       -- Olive Oil
+(7, 4, 100, 'grams'),    -- Tomato
+
+(8, 23, 1, 'piece'),     -- Couscous (as wrap substitute)
+(8, 33, 100, 'grams'),   -- Chickpeas (for hummus)
+(8, 5, 50, 'grams'),     -- Cucumber
+(8, 3, 50, 'grams'),     -- Bell Pepper
+
+(9, 4, 400, 'grams'),    -- Tomato
+(9, 1, 1, 'piece'),      -- Onion
+(9, 2, 2, 'cloves'),     -- Garlic
+
+-- ===========================
+-- DINNER RECIPES
+-- ===========================
+(10, 20, 400, 'grams'),  -- Pasta
+(10, 26, 300, 'grams'),  -- Ground Beef
+(10, 1, 1, 'piece'),     -- Onion
+(10, 4, 400, 'grams'),   -- Tomato
+
+(11, 28, 200, 'grams'),  -- Salmon
+(11, 18, 200, 'grams'),  -- White Rice
+(11, 7, 150, 'grams'),   -- Broccoli
+
+(12, 31, 200, 'grams'),  -- Tofu
+(12, 7, 150, 'grams'),   -- Broccoli
+(12, 36, 200, 'ml'),     -- Milk (coconut milk substitute)
+
+(13, 25, 200, 'grams'),  -- Chicken Breast
+(13, 3, 100, 'grams'),   -- Bell Pepper
+(13, 7, 100, 'grams'),   -- Broccoli
+(13, 48, 20, 'ml'),      -- Soy Sauce
+
+(14, 20, 300, 'grams'),  -- Pasta (lasagne noodles)
+(14, 26, 300, 'grams'),  -- Ground Beef
+(14, 4, 400, 'grams'),   -- Tomato
+(14, 39, 100, 'grams'),  -- Cheese
+
+-- ===========================
+-- SNACK RECIPES
+-- ===========================
+(15, 14, 1, 'piece'),    -- Banana
+(15, 13, 1, 'piece'),    -- Apple
+(15, 17, 100, 'grams'),  -- Strawberries
+
+(16, 40, 1, 'piece'),    -- Egg
+
+(17, 6, 150, 'grams'),   -- Carrot
+(17, 33, 100, 'grams');  -- Chickpeas
+
+-- ===========================
+-- SAMPLE DATA - RECIPE TAGS
+-- ===========================
+
+INSERT INTO recipe_tags (recipe_id, tag_id) VALUES
+
+-- ===========================
+-- BREAKFAST RECIPES
+-- ===========================
+(1, 13), (1, 12), (1, 28), (1, 47),            -- Oatmeal: Breakfast, Healthy, Sweet, Energy Boost
+(2, 13), (2, 12), (2, 11),                     -- Yogurt: Breakfast, Healthy, Low Calorie
+(3, 13), (3, 10), (3, 37),                     -- Omelet: Breakfast, High Protein, Budget-friendly
+(4, 13), (4, 12), (4, 38),                     -- Avocado Toast: Breakfast, Healthy, Kid-friendly
+(5, 13), (5, 12), (5, 28), (5, 47),            -- Smoothie Bowl: Breakfast, Healthy, Sweet, Energy Boost
+
+-- ===========================
+-- LUNCH RECIPES
+-- ===========================
+(6, 14), (6, 10), (6, 12),                     -- Chicken Salad: Lunch, High Protein, Healthy
+(7, 14), (7, 19), (7, 37),                     -- Pasta Pesto: Lunch, Italian, Budget-friendly
+(8, 14), (8, 1), (8, 12),                      -- Wrap Hummus: Lunch, Vegetarian, Healthy
+(9, 14), (9, 1), (9, 18),                      -- Tomato Soup: Lunch, Vegetarian, Quick Meal
+
+-- ===========================
+-- DINNER RECIPES
+-- ===========================
+(10, 15), (10, 19), (10, 29),                  -- Spaghetti Bolognese: Dinner, Italian, Savory
+(11, 15), (11, 3), (11, 12),                   -- Salmon: Dinner, Pescatarian, Healthy
+(12, 15), (12, 1), (12, 26), (12, 27),         -- Vegetarian Curry: Dinner, Vegetarian, Asian, Spicy
+(13, 15), (13, 20), (13, 18),                  -- Chicken Stir-fry: Dinner, Asian, Quick Meal
+(14, 15), (14, 38), (14, 39),                  -- Lasagne: Dinner, Kid-friendly, Festive
+
+-- ===========================
+-- SNACK RECIPES
+-- ===========================
+(15, 16), (15, 12), (15, 47),                  -- Fruit Mix: Snack, Healthy, Energy Boost
+(15, 11), (16, 10), (16, 8),                   -- Boiled Egg: Snack, High Protein, Keto
+(17, 16), (17, 1), (17, 37);                   -- Hummus with Carrot: Snack, Vegetarian, Budget-friendly

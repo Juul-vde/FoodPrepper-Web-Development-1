@@ -15,10 +15,16 @@ class PatternRouter
     {
         $uri = $this->stripParameters($uri);
 
+        // Redirect root path to auth/index
+        if (empty($uri) || $uri === '/') {
+            header('Location: /auth/index');
+            exit;
+        }
+
         $explodedUri = explode('/', $uri);
 
         if (!isset($explodedUri[0]) || empty($explodedUri[0])) {
-            $explodedUri[0] = 'home';
+            $explodedUri[0] = 'auth';
         }
         $controllerName = "App\\Controllers\\" . $explodedUri[0] . "controller";
 

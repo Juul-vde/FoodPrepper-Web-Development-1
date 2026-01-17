@@ -104,6 +104,21 @@ class RecipeService
         return $this->recipeRepository->removeTag($recipeId, $tagId);
     }
 
+    public function addIngredientToRecipe($recipeId, $ingredientId, $quantity, $unit)
+    {
+        return $this->recipeRepository->addIngredient($recipeId, $ingredientId, $quantity, $unit);
+    }
+
+    public function removeIngredientFromRecipe($recipeId, $ingredientId)
+    {
+        return $this->recipeRepository->removeIngredient($recipeId, $ingredientId);
+    }
+
+    public function removeAllIngredientsFromRecipe($recipeId)
+    {
+        return $this->recipeRepository->removeAllIngredients($recipeId);
+    }
+
     public function getRecipeWithIngredients($recipeId)
     {
         $recipe = $this->getRecipeById($recipeId);

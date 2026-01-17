@@ -11,6 +11,7 @@ class User
     private $profilePhoto;
     private $dietaryPreferences;
     private $allergies;
+    private $isAdmin;
     private $createdAt;
     private $updatedAt;
 
@@ -55,6 +56,11 @@ class User
     public function getAllergies()
     {
         return $this->allergies;
+    }
+
+    public function getIsAdmin()
+    {
+        return $this->isAdmin;
     }
 
     public function getCreatedAt()
@@ -107,6 +113,12 @@ class User
     public function setAllergies($allergies)
     {
         $this->allergies = $allergies;
+        return $this;
+    }
+
+    public function setIsAdmin($isAdmin)
+    {
+        $this->isAdmin = $isAdmin;
         return $this;
     }
 

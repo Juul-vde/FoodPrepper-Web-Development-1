@@ -42,6 +42,7 @@ class AuthService
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_name'] = $name;
             $_SESSION['user_email'] = $email;
+            $_SESSION['is_admin'] = 0;
             return true;
         }
 
@@ -60,6 +61,7 @@ class AuthService
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_email'] = $user['email'];
+            $_SESSION['is_admin'] = $user['is_admin'] ?? 0;
             return true;
         }
 
@@ -83,5 +85,17 @@ class AuthService
             return $this->userRepository->findById($_SESSION['user_id']);
         }
         return null;
+    }
+
+    public function isAdmin()
+    {
+        return isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+    }
+
+    public function requireAdmin()
+    {
+        if (!$this->isAdmin()) {
+            throw new \Exception("Admin access required");
+        }
     }
 }

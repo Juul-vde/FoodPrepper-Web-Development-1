@@ -147,4 +147,10 @@ class shoppinglistcontroller
             exit;
         }
     }
+
+    public function download()
+    {
+        // Alias for export to support both naming conventions
+        $this->export();
+    }
 }

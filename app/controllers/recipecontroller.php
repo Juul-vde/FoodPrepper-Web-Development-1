@@ -72,6 +72,14 @@ class recipecontroller
 
     public function create()
     {
+        try {
+            $this->authService->requireAdmin();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "You don't have permission to create recipes";
+            header('Location: /recipe/index');
+            exit;
+        }
+
         $tags = $this->tagService->getAllTags();
         $commonTags = $this->tagService->getCommonTags();
 
@@ -80,6 +88,14 @@ class recipecontroller
 
     public function handleCreate()
     {
+        try {
+            $this->authService->requireAdmin();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "You don't have permission to create recipes";
+            header('Location: /recipe/index');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /recipe/create');
             exit;
@@ -96,7 +112,18 @@ class recipecontroller
             $difficulty = $_POST['difficulty'] ?? 'medium';
             $categoryId = $_POST['category_id'] ?? null;
             $tags = $_POST['tags'] ?? [];
+            $ingredients = $_POST['ingredients'] ?? []; // Array of ingredient data
 
+            // Validate required fields
+            if (empty($title)) {
+                throw new \Exception("Recipe title is required");
+            }
+
+            if (empty($instructions)) {
+                throw new \Exception("Instructions are required");
+            }
+
+            // Create recipe
             $recipeId = $this->recipeService->createRecipe(
                 $title,
                 $description,
@@ -110,6 +137,20 @@ class recipecontroller
                 $tags
             );
 
+            // Add ingredients to recipe
+            if (!empty($ingredients)) {
+                foreach ($ingredients as $ingredient) {
+                    if (isset($ingredient['id']) && isset($ingredient['quantity']) && isset($ingredient['unit'])) {
+                        $this->recipeService->addIngredientToRecipe(
+                            $recipeId,
+                            $ingredient['id'],
+                            $ingredient['quantity'],
+                            $ingredient['unit']
+                        );
+                    }
+                }
+            }
+
             $_SESSION['success'] = "Recipe created successfully";
             header('Location: /recipe/view?id=' . $recipeId);
             exit;
@@ -120,8 +161,22 @@ class recipecontroller
         }
     }
 
+    public function store()
+    {
+        // Alias for handleCreate to support both naming conventions
+        $this->handleCreate();
+    }
+
     public function edit()
     {
+        try {
+            $this->authService->requireAdmin();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "You don't have permission to edit recipes";
+            header('Location: /recipe/index');
+            exit;
+        }
+
         $recipeId = $_GET['id'] ?? null;
 
         if (!$recipeId) {
@@ -145,6 +200,14 @@ class recipecontroller
 
     public function handleEdit()
     {
+        try {
+            $this->authService->requireAdmin();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "You don't have permission to edit recipes";
+            header('Location: /recipe/index');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /recipe/index');
             exit;
@@ -161,11 +224,23 @@ class recipecontroller
             $servings = $_POST['servings'] ?? 1;
             $difficulty = $_POST['difficulty'] ?? 'medium';
             $categoryId = $_POST['category_id'] ?? null;
+            $tags = $_POST['tags'] ?? [];
+            $ingredients = $_POST['ingredients'] ?? [];
 
             if (!$recipeId) {
                 throw new \Exception("Recipe ID is required");
             }
 
+            // Validate required fields
+            if (empty($title)) {
+                throw new \Exception("Recipe title is required");
+            }
+
+            if (empty($instructions)) {
+                throw new \Exception("Instructions are required");
+            }
+
+            // Update recipe basic info
             $this->recipeService->updateRecipe(
                 $recipeId,
                 $title,
@@ -179,6 +254,34 @@ class recipecontroller
                 $categoryId
             );
 
+            // Update tags - remove all and re-add
+            $currentRecipe = $this->recipeService->getRecipeById($recipeId);
+            if (isset($currentRecipe['tags'])) {
+                foreach (explode(',', $currentRecipe['tags']) as $tagId) {
+                    $this->recipeService->removeTagFromRecipe($recipeId, trim($tagId));
+                }
+            }
+            
+            foreach ($tags as $tagId) {
+                $this->recipeService->addTagToRecipe($recipeId, $tagId);
+            }
+
+            // Update ingredients - remove all and re-add
+            $this->recipeService->removeAllIngredientsFromRecipe($recipeId);
+            
+            if (!empty($ingredients)) {
+                foreach ($ingredients as $ingredient) {
+                    if (isset($ingredient['id']) && isset($ingredient['quantity']) && isset($ingredient['unit'])) {
+                        $this->recipeService->addIngredientToRecipe(
+                            $recipeId,
+                            $ingredient['id'],
+                            $ingredient['quantity'],
+                            $ingredient['unit']
+                        );
+                    }
+                }
+            }
+
             $_SESSION['success'] = "Recipe updated successfully";
             header('Location: /recipe/view?id=' . $recipeId);
             exit;
@@ -189,8 +292,22 @@ class recipecontroller
         }
     }
 
+    public function update()
+    {
+        // Alias for handleEdit to support both naming conventions
+        $this->handleEdit();
+    }
+
     public function delete()
     {
+        try {
+            $this->authService->requireAdmin();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "You don't have permission to delete recipes";
+            header('Location: /recipe/index');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
             return;

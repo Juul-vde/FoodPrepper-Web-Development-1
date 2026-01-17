@@ -9,6 +9,15 @@ class RecipeRepository extends BaseRepository
 {
     protected $table = 'recipes';
 
+    public function findAll()
+    {
+        $sql = "SELECT r.*, c.name as category_name FROM {$this->table} r 
+                LEFT JOIN categories c ON r.category_id = c.id 
+                ORDER BY r.title ASC";
+        $stmt = $this->execute($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function create(Recipe $recipe)
     {
         $sql = "INSERT INTO {$this->table} (title, description, instructions, image_url, prep_time, cook_time, servings, difficulty, category_id) 
@@ -85,6 +94,30 @@ class RecipeRepository extends BaseRepository
     {
         $sql = "DELETE FROM recipe_tags WHERE recipe_id = :recipe_id AND tag_id = :tag_id";
         return $this->execute($sql, [':recipe_id' => $recipeId, ':tag_id' => $tagId])->rowCount() > 0;
+    }
+
+    public function addIngredient($recipeId, $ingredientId, $quantity, $unit)
+    {
+        $sql = "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) 
+                VALUES (:recipe_id, :ingredient_id, :quantity, :unit)";
+        return $this->execute($sql, [
+            ':recipe_id' => $recipeId,
+            ':ingredient_id' => $ingredientId,
+            ':quantity' => $quantity,
+            ':unit' => $unit
+        ])->rowCount() > 0;
+    }
+
+    public function removeIngredient($recipeId, $ingredientId)
+    {
+        $sql = "DELETE FROM recipe_ingredients WHERE recipe_id = :recipe_id AND ingredient_id = :ingredient_id";
+        return $this->execute($sql, [':recipe_id' => $recipeId, ':ingredient_id' => $ingredientId])->rowCount() > 0;
+    }
+
+    public function removeAllIngredients($recipeId)
+    {
+        $sql = "DELETE FROM recipe_ingredients WHERE recipe_id = :recipe_id";
+        return $this->execute($sql, [':recipe_id' => $recipeId])->rowCount() > 0;
     }
 
     public function search($keyword)
