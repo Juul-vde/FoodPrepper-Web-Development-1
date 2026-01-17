@@ -1,5 +1,6 @@
 <?php
 require '../vendor/autoload.php';
+require '../views/patternrouter.php';
 
 $uri = trim($_SERVER['REQUEST_URI'], '/');
 
