@@ -1,8 +1,15 @@
 <?php
+// View file for editing a meal in the week planner
+// This page allows changing the day, meal type, or servings for a planned meal
+
+// Set page title
 $pageTitle = 'Edit Meal';
+
+// Start output buffering
 ob_start();
 ?>
 
+<!-- Page header -->
 <div class="row mb-4">
     <div class="col-md-12">
         <h1>📝 Edit Meal</h1>
@@ -11,25 +18,35 @@ ob_start();
 </div>
 
 <div class="row">
+    <!-- Center the form (offset pushes it 2 columns from left) -->
     <div class="col-md-8 offset-md-2">
         <div class="card">
             <div class="card-header">
                 <h5>Update Meal Details</h5>
             </div>
             <div class="card-body">
+                <!-- Check if meal data exists -->
                 <?php if (isset($mealItem) && $mealItem): ?>
+                    <!-- Edit form - sends data to /weekplanner/update -->
                     <form method="POST" action="/weekplanner/update">
+                        <!-- Hidden field - sends meal ID without showing it -->
                         <input type="hidden" name="item_id" value="<?php echo htmlspecialchars($mealItem['item_id']); ?>">
 
+                        <!-- Recipe name (disabled - can't change recipe) -->
                         <div class="mb-3">
                             <label for="recipe_title" class="form-label">Recipe</label>
+                            <!-- disabled means user can see but not edit this field -->
                             <input type="text" class="form-control" id="recipe_title" value="<?php echo htmlspecialchars($mealItem['recipe_title'] ?? 'Unknown'); ?>" disabled>
                         </div>
 
+                        <!-- Day of week dropdown -->
                         <div class="mb-3">
                             <label for="dayOfWeek" class="form-label">Day of Week <span class="text-danger">*</span></label>
+                            <!-- required means user must select a day before submitting -->
                             <select class="form-select" id="dayOfWeek" name="day_of_week" required>
                                 <option value="">Select a day...</option>
+                                <!-- Each option checks if it matches current day -->
+                                <!-- If yes, add 'selected' to show it as selected in dropdown -->
                                 <option value="1" <?php echo $mealItem['day_of_week'] == 1 ? 'selected' : ''; ?>>Monday</option>
                                 <option value="2" <?php echo $mealItem['day_of_week'] == 2 ? 'selected' : ''; ?>>Tuesday</option>
                                 <option value="3" <?php echo $mealItem['day_of_week'] == 3 ? 'selected' : ''; ?>>Wednesday</option>
@@ -40,10 +57,12 @@ ob_start();
                             </select>
                         </div>
 
+                        <!-- Meal type dropdown -->
                         <div class="mb-3">
                             <label for="mealType" class="form-label">Meal Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="mealType" name="meal_type" required>
                                 <option value="">Select meal type...</option>
+                                <!-- Icons make it easier to identify meal types -->
                                 <option value="breakfast" <?php echo $mealItem['meal_type'] == 'breakfast' ? 'selected' : ''; ?>>🥐 Breakfast</option>
                                 <option value="lunch" <?php echo $mealItem['meal_type'] == 'lunch' ? 'selected' : ''; ?>>🍽️ Lunch</option>
                                 <option value="dinner" <?php echo $mealItem['meal_type'] == 'dinner' ? 'selected' : ''; ?>>🍴 Dinner</option>
@@ -51,18 +70,25 @@ ob_start();
                             </select>
                         </div>
 
+                        <!-- Number of servings input -->
                         <div class="mb-3">
                             <label for="servings" class="form-label">Servings <span class="text-danger">*</span></label>
+                            <!-- type="number" provides +/- buttons and validates numeric input -->
+                            <!-- min="1" max="20" limits range to reasonable values -->
                             <input type="number" class="form-control" id="servings" name="servings" min="1" max="20" value="<?php echo htmlspecialchars($mealItem['servings'] ?? 1); ?>" required>
                             <small class="text-muted">Number of servings for this meal</small>
                         </div>
 
+                        <!-- Action buttons -->
                         <div class="mb-3">
+                            <!-- Cancel button - goes back to week planner -->
                             <a href="/weekplanner/index" class="btn btn-secondary">Cancel</a>
+                            <!-- Save button - submits form -->
                             <button type="submit" class="btn btn-success">Save Changes</button>
                         </div>
                     </form>
                 <?php else: ?>
+                    <!-- Error message if meal not found -->
                     <div class="alert alert-danger">
                         <p>Meal not found. <a href="/weekplanner/index">Back to Week Planner</a></p>
                     </div>
@@ -73,6 +99,9 @@ ob_start();
 </div>
 
 <?php
+// Save HTML to $content variable
 $content = ob_get_clean();
+
+// Include base layout (adds navbar and structure)
 include __DIR__ . '/../layouts/base.php';
 ?>

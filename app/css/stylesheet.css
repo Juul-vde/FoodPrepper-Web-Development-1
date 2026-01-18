@@ -1,0 +1,80 @@
+/* ================================================
+   FoodPrepper Application Stylesheet
+   Custom CSS styles for all views
+   ================================================ */
+
+/* ================================================
+   GENERAL UTILITY STYLES
+   ================================================ */
+
+/* Profile photo styling */
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+
+/* Profile photo placeholder */
+.profile-photo-placeholder {
+    width: 150px;
+    height: 150px;
+}
+
+/* Inline form (for buttons next to each other) */
+.form-inline {
+    display: inline;
+}
+
+/* Clickable row with pointer cursor */
+.clickable-row {
+    cursor: pointer;
+}
+
+/* ================================================
+   SHOPPING LIST STYLES
+   ================================================ */
+
+/* Green background for checked items */
+.item-checked {
+    background-color: #d1e7dd !important;
+}
+
+/* Strikethrough and gray color for checked items */
+.text-checked {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+/* Pointer cursor on hover over checkboxes */
+.shopping-item-checkbox {
+    cursor: pointer;
+}
+
+/* Slightly enlarge checkbox on hover */
+.shopping-item-checkbox:hover {
+    transform: scale(1.1);
+}
+
+/* ================================================
+   RECIPE VIEW STYLES
+   ================================================ */
+
+/* More space between lines for readability */
+.recipe-instructions {
+    line-height: 1.8;
+}
+
+/* Sticky sidebar - stays at top when scrolling */
+.sticky-top {
+    position: sticky;
+    top: 20px;
+    z-index: 10;
+}
+
+/* On mobile devices, don't make sidebar sticky */
+@media (max-width: 768px) {
+    .sticky-top {
+        position: relative;
+        top: auto;
+    }
+}

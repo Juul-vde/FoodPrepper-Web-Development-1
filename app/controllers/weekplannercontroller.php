@@ -1,4 +1,5 @@
 <?php
+// This controller handles the weekly meal planner
 
 namespace App\Controllers;
 
@@ -7,159 +8,174 @@ use App\Services\WeeklyPlanService;
 use App\Services\RecipeService;
 use App\Services\TagService;
 use App\Services\CategoryService;
+use App\Services\CsrfService;
 
 class weekplannercontroller
 {
+    // Variables to hold our services
     private $authService;
     private $weeklyPlanService;
     private $recipeService;
     private $tagService;
     private $categoryService;
 
+    // Constructor runs when controller is created
     public function __construct()
     {
+        // Create service objects
         $this->authService = new AuthService();
         $this->weeklyPlanService = new WeeklyPlanService();
         $this->recipeService = new RecipeService();
         $this->tagService = new TagService();
         $this->categoryService = new CategoryService();
 
+        // Check if user is logged in
         if (!$this->authService->isAuthenticated()) {
             header('Location: /auth/index');
             exit;
         }
+        
+        // Create security token
+        CsrfService::generateToken();
     }
 
+    // Show the weekly planner page
     public function index()
     {
+        // Get current user ID
         $userId = $_SESSION['user_id'];
+        
+        // Get current week's plan
         $weeklyPlan = $this->weeklyPlanService->getCurrentWeekPlan($userId);
 
+        // If no plan exists, create one
         if (!$weeklyPlan) {
+            // Get monday of this week
             $weekStartDate = date('Y-m-d', strtotime('monday this week'));
+            
+            // Create new plan
+            $planId = $this->weeklyPlanService->createWeeklyPlan($userId, $weekStartDate, 1);
+            
+            // Set plan data
             $weeklyPlan = new \stdClass();
-            $weeklyPlan['id'] = $this->weeklyPlanService->createWeeklyPlan($userId, $weekStartDate, 1);
+            $weeklyPlan['id'] = $planId;
             $weeklyPlan['week_start_date'] = $weekStartDate;
             $weeklyPlan['number_of_servings'] = 1;
         }
 
+        // Get all meals for this week
         $mealsData = $this->weeklyPlanService->getWeekPlanWithMeals($weeklyPlan['id']);
         
-        // Filter out rows where recipe_id is null (from LEFT JOINs with no meals)
+        // Remove empty rows (from database LEFT JOIN)
         $meals = array_filter($mealsData, function($meal) {
             return !is_null($meal['recipe_id']);
         });
         $meals = array_values($meals);
         
+        // Organize meals by day
         $mealsByDay = $this->organizeMealsByDay($mealsData);
+        
+        // Get all recipes for adding meals
         $recipes = $this->recipeService->getAllRecipes();
 
+        // Load the weekplanner page
         include __DIR__ . '/../views/weekplanner/index.php';
     }
 
-    public function create()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            return;
-        }
-
-        try {
-            $userId = $_SESSION['user_id'];
-            $weekStartDate = $_POST['week_start_date'] ?? null;
-            $servings = $_POST['number_of_servings'] ?? 1;
-
-            if (!$weekStartDate) {
-                throw new \Exception("Week start date is required");
-            }
-
-            // Validate date format (YYYY-MM-DD)
-            $dateCheck = \DateTime::createFromFormat('Y-m-d', $weekStartDate);
-            if (!$dateCheck || $dateCheck->format('Y-m-d') !== $weekStartDate) {
-                throw new \Exception("Invalid date format");
-            }
-
-            $weeklyPlanId = $this->weeklyPlanService->createWeeklyPlan($userId, $weekStartDate, $servings);
-
-            $_SESSION['success'] = "Weekly plan created successfully";
-            header('Location: /weekplanner/index');
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /weekplanner/index');
-            exit;
-        }
-    }
-
+    // Add a meal to the weekly plan
     public function addMeal()
     {
+        // Check if form was submitted
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Handle meal addition
+            
             try {
+                // Check security token
+                $csrfToken = $_POST['csrf_token'] ?? '';
+                if (!CsrfService::validateToken($csrfToken)) {
+                    throw new \Exception("Invalid security token. Please try again.");
+                }
+                
+                // Get current user ID
                 $userId = $_SESSION['user_id'];
+                
+                // Get form data
                 $recipeId = $_POST['recipe_id'] ?? null;
                 $dayOfWeek = $_POST['day_of_week'] ?? null;
                 $mealType = $_POST['meal_type'] ?? 'lunch';
                 $servings = $_POST['servings'] ?? 1;
 
+                // Check required fields
                 if (!$recipeId || !$dayOfWeek) {
                     throw new \Exception("Recipe and day are required");
                 }
 
-                // Validate day of week (1-7)
+                // Check if day is valid (1-7 for Monday-Sunday)
                 if (!is_numeric($dayOfWeek) || $dayOfWeek < 1 || $dayOfWeek > 7) {
                     throw new \Exception("Invalid day of week");
                 }
 
-                // Validate servings
+                // Check if servings is valid
                 if (!is_numeric($servings) || $servings < 1 || $servings > 20) {
                     throw new \Exception("Servings must be between 1 and 20");
                 }
 
+                // Get current weekly plan
                 $weeklyPlan = $this->weeklyPlanService->getCurrentWeekPlan($userId);
+                
+                // Create plan if it doesn't exist
                 if (!$weeklyPlan) {
                     $weekStartDate = date('Y-m-d', strtotime('monday this week'));
                     $weeklyPlan = new \stdClass();
                     $weeklyPlan['id'] = $this->weeklyPlanService->createWeeklyPlan($userId, $weekStartDate, 1);
                 }
 
+                // Add the meal
                 $this->weeklyPlanService->addMealToDay($weeklyPlan['id'], $recipeId, $dayOfWeek, $mealType, $servings);
 
+                // Show success message
                 $_SESSION['success'] = "Meal added to weekly plan successfully";
                 header('Location: /weekplanner/index');
                 exit;
+                
             } catch (\Exception $e) {
+                // Show error message
                 $_SESSION['error'] = $e->getMessage();
                 header('Location: /weekplanner/addmeal');
                 exit;
             }
+            
         } else {
-            // Show recipe selection form with filters
+            // Show the form to add a meal
+            
             try {
+                // Get search filters from URL
                 $search = $_GET['search'] ?? '';
                 $categoryId = $_GET['category'] ?? null;
 
                 // Start with all recipes
                 $recipes = $this->recipeService->getAllRecipes();
 
-                // Apply category filter
+                // Filter by category if selected
                 if ($categoryId) {
-                    // Filter by category using new junction table method
                     $recipes = $this->recipeService->searchByCategory($categoryId);
                 }
 
-                // Filter by search query (applied to already-filtered results)
+                // Filter by search text if entered
                 if ($search) {
-                    $recipes = array_filter($recipes, function($recipe) use ($search) {
-                        $searchLower = strtolower($search);
-                        return strpos(strtolower($recipe['title']), $searchLower) !== false ||
-                               strpos(strtolower($recipe['description']), $searchLower) !== false;
+                    $searchLower = strtolower($search);
+                    $recipes = array_filter($recipes, function($recipe) use ($searchLower) {
+                        $titleMatch = strpos(strtolower($recipe['title']), $searchLower) !== false;
+                        $descMatch = strpos(strtolower($recipe['description']), $searchLower) !== false;
+                        return $titleMatch || $descMatch;
                     });
                 }
 
+                // Get all categories for filter dropdown
                 $categories = $this->categoryService->getAllCategories();
 
+                // Load the add meal page
                 include __DIR__ . '/../views/weekplanner/addmeal.php';
+                
             } catch (\Exception $e) {
                 $_SESSION['error'] = $e->getMessage();
                 header('Location: /weekplanner/index');
@@ -168,160 +184,68 @@ class weekplannercontroller
         }
     }
 
+    // Remove a meal from the weekly plan
     public function removeMeal()
     {
+        // Check if form was submitted
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
             return;
         }
 
         try {
+            // Check security token
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!CsrfService::validateToken($csrfToken)) {
+                throw new \Exception("Invalid security token. Please try again.");
+            }
+            
+            // Get item ID from form
             $itemId = $_POST['item_id'] ?? null;
 
+            // Check if ID is provided
             if (!$itemId) {
                 throw new \Exception("Item ID is required");
             }
 
+            // Remove the meal
             $this->weeklyPlanService->removeMeal($itemId);
 
+            // Show success message
             $_SESSION['success'] = "Meal removed from weekly plan";
             header('Location: /weekplanner/index');
             exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /weekplanner/index');
-            exit;
-        }
-    }
-
-    public function edit()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(400);
-            return;
-        }
-
-        try {
-            $itemId = $_GET['meal_id'] ?? null;
-
-            if (!$itemId) {
-                throw new \Exception("Meal ID is required");
-            }
-
-            // For now, we'll collect the item data from the weekly plan items
-            // This would need a proper repository method to fetch a single item
-            $userId = $_SESSION['user_id'];
-            $weeklyPlan = $this->weeklyPlanService->getCurrentWeekPlan($userId);
-
-            if (!$weeklyPlan) {
-                throw new \Exception("No weekly plan found");
-            }
-
-            $mealsData = $this->weeklyPlanService->getWeekPlanWithMeals($weeklyPlan['id']);
             
-            // Find the specific meal item
-            $mealItem = null;
-            foreach ($mealsData as $meal) {
-                if ($meal['item_id'] == $itemId) {
-                    $mealItem = $meal;
-                    break;
-                }
-            }
-
-            if (!$mealItem) {
-                throw new \Exception("Meal not found");
-            }
-
-            $categories = $this->categoryService->getAllCategories();
-            $tags = $this->tagService->getAllTags();
-
-            include __DIR__ . '/../views/weekplanner/edit.php';
         } catch (\Exception $e) {
+            // Show error message
             $_SESSION['error'] = $e->getMessage();
             header('Location: /weekplanner/index');
             exit;
         }
     }
 
-    public function update()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            return;
-        }
-
-        try {
-            $itemId = $_POST['item_id'] ?? null;
-            $dayOfWeek = $_POST['day_of_week'] ?? null;
-            $mealType = $_POST['meal_type'] ?? 'lunch';
-            $servings = $_POST['servings'] ?? 1;
-
-            if (!$itemId || !$dayOfWeek) {
-                throw new \Exception("Item ID and day are required");
-            }
-
-            // Validate day of week (1-7)
-            if (!is_numeric($dayOfWeek) || $dayOfWeek < 1 || $dayOfWeek > 7) {
-                throw new \Exception("Invalid day of week");
-            }
-
-            // Validate servings
-            if (!is_numeric($servings) || $servings < 1 || $servings > 20) {
-                throw new \Exception("Servings must be between 1 and 20");
-            }
-
-            // Update the meal item (recipe_id stays the same, only update day, meal type, and servings)
-            $this->weeklyPlanService->updateMeal($itemId, $dayOfWeek, $mealType, $servings);
-
-            $_SESSION['success'] = "Meal updated successfully";
-            header('Location: /weekplanner/index');
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /weekplanner/index');
-            exit;
-        }
-    }
-
-    public function updateServings()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            return;
-        }
-
-        try {
-            $weeklyPlanId = $_POST['weekly_plan_id'] ?? null;
-            $numberOfServings = $_POST['number_of_servings'] ?? 1;
-
-            if (!$weeklyPlanId) {
-                throw new \Exception("Weekly plan ID is required");
-            }
-
-            $this->weeklyPlanService->updateNumberOfServings($weeklyPlanId, $numberOfServings);
-
-            $_SESSION['success'] = "Number of servings updated";
-            header('Location: /weekplanner/index');
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /weekplanner/index');
-            exit;
-        }
-    }
-
+    // Helper function to organize meals by day
     private function organizeMealsByDay($mealsData)
     {
+        // Create empty array
         $organized = [];
 
+        // Loop through each meal
         foreach ($mealsData as $meal) {
+            // Get the day number
             $day = $meal['day_of_week'] ?? null;
-            if ($day === null) continue;
+            
+            // Skip if no day
+            if ($day === null) {
+                continue;
+            }
 
+            // Create array for this day if it doesn't exist
             if (!isset($organized[$day])) {
                 $organized[$day] = [];
             }
 
+            // Add meal to this day
             $organized[$day][] = $meal;
         }
 

@@ -1,4 +1,5 @@
 <?php
+// This controller handles viewing recipes (admin can also create/edit)
 
 namespace App\Controllers;
 
@@ -10,72 +11,85 @@ use App\Services\WeeklyPlanService;
 
 class recipecontroller
 {
+    // Variables to hold our services
     private $authService;
     private $recipeService;
     private $tagService;
     private $categoryService;
     private $weeklyPlanService;
 
+    // Constructor runs when controller is created
     public function __construct()
     {
+        // Create service objects
         $this->authService = new AuthService();
         $this->recipeService = new RecipeService();
         $this->tagService = new TagService();
         $this->categoryService = new CategoryService();
         $this->weeklyPlanService = new WeeklyPlanService();
 
+        // Check if user is logged in
         if (!$this->authService->isAuthenticated()) {
             header('Location: /auth/index');
             exit;
         }
     }
 
+    // Show all recipes with filters
     public function index()
     {
-        // Get filter parameters
+        // Get search and category from URL
         $searchQuery = $_GET['q'] ?? '';
         $categoryId = $_GET['category'] ?? null;
 
         // Start with all recipes
         $recipes = $this->recipeService->getAllRecipes();
 
-        // Apply category filter first
+        // Filter by category if selected
         if ($categoryId) {
             $recipes = $this->recipeService->searchByCategory($categoryId);
         }
 
-        // Apply search filter to the already-filtered results
+        // Filter by search text if entered
         if ($searchQuery) {
-            $recipes = array_filter($recipes, function($recipe) use ($searchQuery) {
-                $searchLower = strtolower($searchQuery);
-                return strpos(strtolower($recipe['title']), $searchLower) !== false ||
-                       strpos(strtolower($recipe['description']), $searchLower) !== false;
+            $searchLower = strtolower($searchQuery);
+            $recipes = array_filter($recipes, function($recipe) use ($searchLower) {
+                $titleMatch = strpos(strtolower($recipe['title']), $searchLower) !== false;
+                $descMatch = strpos(strtolower($recipe['description']), $searchLower) !== false;
+                return $titleMatch || $descMatch;
             });
         }
 
+        // Get all categories for dropdown filter
         $categories = $this->categoryService->getAllCategories();
 
+        // Load the recipes page
         include __DIR__ . '/../views/recipes/index.php';
     }
 
+    // Show one recipe with details
     public function view()
     {
+        // Get recipe ID from URL
         $recipeId = $_GET['id'] ?? null;
 
+        // Check if ID is provided
         if (!$recipeId) {
             header('Location: /recipe/index');
             exit;
         }
 
+        // Get recipe with ingredients
         $recipe = $this->recipeService->getRecipeWithIngredients($recipeId);
 
+        // Check if recipe exists
         if (!$recipe) {
             $_SESSION['error'] = "Recipe not found";
             header('Location: /recipe/index');
             exit;
         }
 
-        // Check if recipe is already in current week's plan
+        // Check if recipe is in current week's plan
         $recipeInWeekplan = null;
         if (isset($_SESSION['user_id'])) {
             $userId = $_SESSION['user_id'];
@@ -83,6 +97,7 @@ class recipecontroller
             
             if ($weeklyPlan) {
                 $mealsData = $this->weeklyPlanService->getWeekPlanWithMeals($weeklyPlan['id']);
+                
                 // Find meals with this recipe
                 $recipeInWeekplan = array_filter($mealsData, function($meal) use ($recipeId) {
                     return $meal['recipe_id'] == $recipeId;
@@ -90,14 +105,18 @@ class recipecontroller
             }
         }
         
+        // Load the recipe view page
         include __DIR__ . '/../views/recipes/view.php';
     }
 
+    // Search recipes (additional search page)
     public function search()
     {
+        // Get search parameters
         $keyword = $_GET['q'] ?? '';
         $tagId = $_GET['tag'] ?? null;
 
+        // Search by tag or keyword
         if ($tagId) {
             $recipes = $this->recipeService->searchByTag($tagId);
         } elseif ($keyword) {
@@ -106,270 +125,10 @@ class recipecontroller
             $recipes = $this->recipeService->getAllRecipes();
         }
 
+        // Get all tags for filter
         $tags = $this->tagService->getAllTags();
 
+        // Load search page
         include __DIR__ . '/../views/recipes/search.php';
-    }
-
-    public function create()
-    {
-        try {
-            $this->authService->requireAdmin();
-        } catch (\Exception $e) {
-            $_SESSION['error'] = "You don't have permission to create recipes";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        $tags = $this->tagService->getAllTags();
-        $commonTags = $this->tagService->getCommonTags();
-
-        include __DIR__ . '/../views/recipes/create.php';
-    }
-
-    public function handleCreate()
-    {
-        try {
-            $this->authService->requireAdmin();
-        } catch (\Exception $e) {
-            $_SESSION['error'] = "You don't have permission to create recipes";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /recipe/create');
-            exit;
-        }
-
-        try {
-            $title = $_POST['title'] ?? '';
-            $description = $_POST['description'] ?? '';
-            $instructions = $_POST['instructions'] ?? '';
-            $imageUrl = $_POST['image_url'] ?? '';
-            $prepTime = $_POST['prep_time'] ?? 0;
-            $cookTime = $_POST['cook_time'] ?? 0;
-            $servings = $_POST['servings'] ?? 1;
-            $difficulty = $_POST['difficulty'] ?? 'medium';
-            $categoryId = $_POST['category_id'] ?? null;
-            $tags = $_POST['tags'] ?? [];
-            $ingredients = $_POST['ingredients'] ?? []; // Array of ingredient data
-
-            // Validate required fields
-            if (empty($title)) {
-                throw new \Exception("Recipe title is required");
-            }
-
-            if (empty($instructions)) {
-                throw new \Exception("Instructions are required");
-            }
-
-            // Create recipe
-            $recipeId = $this->recipeService->createRecipe(
-                $title,
-                $description,
-                $instructions,
-                $imageUrl,
-                $prepTime,
-                $cookTime,
-                $servings,
-                $difficulty,
-                $categoryId,
-                $tags
-            );
-
-            // Add ingredients to recipe
-            if (!empty($ingredients)) {
-                foreach ($ingredients as $ingredient) {
-                    if (isset($ingredient['id']) && isset($ingredient['quantity']) && isset($ingredient['unit'])) {
-                        $this->recipeService->addIngredientToRecipe(
-                            $recipeId,
-                            $ingredient['id'],
-                            $ingredient['quantity'],
-                            $ingredient['unit']
-                        );
-                    }
-                }
-            }
-
-            $_SESSION['success'] = "Recipe created successfully";
-            header('Location: /recipe/view?id=' . $recipeId);
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /recipe/create');
-            exit;
-        }
-    }
-
-    public function store()
-    {
-        // Alias for handleCreate to support both naming conventions
-        $this->handleCreate();
-    }
-
-    public function edit()
-    {
-        try {
-            $this->authService->requireAdmin();
-        } catch (\Exception $e) {
-            $_SESSION['error'] = "You don't have permission to edit recipes";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        $recipeId = $_GET['id'] ?? null;
-
-        if (!$recipeId) {
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        $recipe = $this->recipeService->getRecipeWithIngredients($recipeId);
-
-        if (!$recipe) {
-            $_SESSION['error'] = "Recipe not found";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        $tags = $this->tagService->getAllTags();
-        $commonTags = $this->tagService->getCommonTags();
-
-        include __DIR__ . '/../views/recipes/edit.php';
-    }
-
-    public function handleEdit()
-    {
-        try {
-            $this->authService->requireAdmin();
-        } catch (\Exception $e) {
-            $_SESSION['error'] = "You don't have permission to edit recipes";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        try {
-            $recipeId = $_POST['recipe_id'] ?? null;
-            $title = $_POST['title'] ?? '';
-            $description = $_POST['description'] ?? '';
-            $instructions = $_POST['instructions'] ?? '';
-            $imageUrl = $_POST['image_url'] ?? '';
-            $prepTime = $_POST['prep_time'] ?? 0;
-            $cookTime = $_POST['cook_time'] ?? 0;
-            $servings = $_POST['servings'] ?? 1;
-            $difficulty = $_POST['difficulty'] ?? 'medium';
-            $categoryId = $_POST['category_id'] ?? null;
-            $tags = $_POST['tags'] ?? [];
-            $ingredients = $_POST['ingredients'] ?? [];
-
-            if (!$recipeId) {
-                throw new \Exception("Recipe ID is required");
-            }
-
-            // Validate required fields
-            if (empty($title)) {
-                throw new \Exception("Recipe title is required");
-            }
-
-            if (empty($instructions)) {
-                throw new \Exception("Instructions are required");
-            }
-
-            // Update recipe basic info
-            $this->recipeService->updateRecipe(
-                $recipeId,
-                $title,
-                $description,
-                $instructions,
-                $imageUrl,
-                $prepTime,
-                $cookTime,
-                $servings,
-                $difficulty,
-                $categoryId
-            );
-
-            // Update tags - remove all and re-add
-            $currentRecipe = $this->recipeService->getRecipeById($recipeId);
-            if (isset($currentRecipe['tags'])) {
-                foreach (explode(',', $currentRecipe['tags']) as $tagId) {
-                    $this->recipeService->removeTagFromRecipe($recipeId, trim($tagId));
-                }
-            }
-            
-            foreach ($tags as $tagId) {
-                $this->recipeService->addTagToRecipe($recipeId, $tagId);
-            }
-
-            // Update ingredients - remove all and re-add
-            $this->recipeService->removeAllIngredientsFromRecipe($recipeId);
-            
-            if (!empty($ingredients)) {
-                foreach ($ingredients as $ingredient) {
-                    if (isset($ingredient['id']) && isset($ingredient['quantity']) && isset($ingredient['unit'])) {
-                        $this->recipeService->addIngredientToRecipe(
-                            $recipeId,
-                            $ingredient['id'],
-                            $ingredient['quantity'],
-                            $ingredient['unit']
-                        );
-                    }
-                }
-            }
-
-            $_SESSION['success'] = "Recipe updated successfully";
-            header('Location: /recipe/view?id=' . $recipeId);
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /recipe/index');
-            exit;
-        }
-    }
-
-    public function update()
-    {
-        // Alias for handleEdit to support both naming conventions
-        $this->handleEdit();
-    }
-
-    public function delete()
-    {
-        try {
-            $this->authService->requireAdmin();
-        } catch (\Exception $e) {
-            $_SESSION['error'] = "You don't have permission to delete recipes";
-            header('Location: /recipe/index');
-            exit;
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            return;
-        }
-
-        try {
-            $recipeId = $_POST['recipe_id'] ?? null;
-
-            if (!$recipeId) {
-                throw new \Exception("Recipe ID is required");
-            }
-
-            $this->recipeService->deleteRecipe($recipeId);
-
-            $_SESSION['success'] = "Recipe deleted successfully";
-            header('Location: /recipe/index');
-            exit;
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /recipe/index');
-            exit;
-        }
     }
 }

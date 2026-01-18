@@ -1,8 +1,15 @@
 <?php
+// View file for editing user profile
+// This page has a form with sections for photo, account info, and dietary preferences
+
+// Set page title
 $pageTitle = 'Edit Profile';
+
+// Start output buffering
 ob_start();
 ?>
 
+<!-- Page header -->
 <div class="row mb-4">
     <div class="col-md-12">
         <h1>✏️ Edit Profile</h1>
@@ -11,31 +18,45 @@ ob_start();
 </div>
 
 <div class="row">
+    <!-- Center the form (offset-md-2 pushes it 2 columns from left) -->
     <div class="col-md-8 offset-md-2">
+        <!-- Form - sends data to /profile/handleUpdate -->
+        <!-- enctype="multipart/form-data" allows file uploads (for photos) -->
         <form method="POST" action="/profile/handleUpdate" enctype="multipart/form-data">
+            <!-- CSRF Protection Token -->
+            <!-- This security token prevents hackers from submitting fake profile updates -->
+            <?php 
+            use App\Services\CsrfService; 
+            echo CsrfService::getTokenField(); 
+            ?>
+            
             <!-- Profile Photo Section -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5>Profile Photo</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Current photo preview (centered) -->
                     <div class="text-center mb-3">
                         <?php if (isset($user['profile_photo']) && $user['profile_photo']): ?>
+                            <!-- Show existing photo -->
                             <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" 
-                                 class="rounded-circle mb-3" 
-                                 id="profilePhotoPreview"
-                                 style="width: 150px; height: 150px; object-fit: cover;">
+                                 class="rounded-circle mb-3 profile-photo" 
+                                 id="profilePhotoPreview">
                         <?php else: ?>
-                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" 
-                                 id="profilePhotoPreview"
-                                 style="width: 150px; height: 150px;">
+                            <!-- Show placeholder if no photo -->
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3 profile-photo-placeholder" 
+                                 id="profilePhotoPreview">
                                 <span class="text-muted">No Photo</span>
                             </div>
                         <?php endif; ?>
                     </div>
                     
+                    <!-- File upload field (for uploading from computer) -->
                     <div class="mb-3">
                         <label for="profile_photo_file" class="form-label">Upload New Photo</label>
+                        <!-- accept limits file types to images only -->
+                        <!-- onchange calls JavaScript to preview photo before uploading -->
                         <input type="file" 
                                class="form-control" 
                                id="profile_photo_file" 
@@ -45,8 +66,10 @@ ob_start();
                         <small class="text-muted">Accepted formats: JPG, PNG, GIF. Max size: 5MB</small>
                     </div>
                     
+                    <!-- URL field (for entering web link to photo) -->
                     <div class="mb-3">
                         <label for="profile_photo" class="form-label">Or Enter Photo URL</label>
+                        <!-- type="url" validates URL format -->
                         <input type="url" 
                                class="form-control" 
                                id="profile_photo" 
@@ -64,8 +87,10 @@ ob_start();
                     <h5>Account Information</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Name field (required) -->
                     <div class="mb-3">
                         <label for="name" class="form-label">Name *</label>
+                        <!-- value fills in current name from database -->
                         <input type="text" 
                                class="form-control" 
                                id="name" 
@@ -74,8 +99,10 @@ ob_start();
                                required>
                     </div>
                     
+                    <!-- Email field (disabled - can't be changed) -->
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
+                        <!-- disabled means user can see but not edit -->
                         <input type="email" 
                                class="form-control" 
                                id="email"
@@ -92,10 +119,13 @@ ob_start();
                     <h5>Dietary Information</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Dietary preferences dropdown -->
                     <div class="mb-3">
                         <label for="dietary_preferences" class="form-label">Dietary Preferences</label>
                         <select class="form-select" id="dietary_preferences" name="dietary_preferences">
                             <option value="">None</option>
+                            <!-- Each option checks if it matches user's current preference -->
+                            <!-- If yes, add 'selected' attribute to show it as selected -->
                             <option value="Vegetarian" <?php echo (isset($user['dietary_preferences']) && $user['dietary_preferences'] === 'Vegetarian') ? 'selected' : ''; ?>>Vegetarian</option>
                             <option value="Vegan" <?php echo (isset($user['dietary_preferences']) && $user['dietary_preferences'] === 'Vegan') ? 'selected' : ''; ?>>Vegan</option>
                             <option value="Pescatarian" <?php echo (isset($user['dietary_preferences']) && $user['dietary_preferences'] === 'Pescatarian') ? 'selected' : ''; ?>>Pescatarian</option>
@@ -106,8 +136,10 @@ ob_start();
                         </select>
                     </div>
                     
+                    <!-- Allergies text area -->
                     <div class="mb-3">
                         <label for="allergies" class="form-label">Allergies</label>
+                        <!-- rows="3" makes text area 3 lines tall -->
                         <textarea class="form-control" 
                                   id="allergies" 
                                   name="allergies"
@@ -121,7 +153,9 @@ ob_start();
             <!-- Action Buttons -->
             <div class="card mb-4">
                 <div class="card-body">
+                    <!-- Save button (submits form) -->
                     <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    <!-- Cancel button (goes back to profile page) -->
                     <a href="/profile/index" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>
@@ -130,18 +164,25 @@ ob_start();
 </div>
 
 <script>
+// JavaScript function to preview photo before uploading
+// Shows photo immediately when user selects a file (before form submit)
 function previewPhoto(input) {
+    // Get the preview element (img or div)
     const preview = document.getElementById('profilePhotoPreview');
     
+    // Check if user selected a file
     if (input.files && input.files[0]) {
+        // FileReader reads the file content
         const reader = new FileReader();
         
+        // When file is loaded, update preview
         reader.onload = function(e) {
-            // If preview is an img element
+            // If preview is already an img tag
             if (preview.tagName === 'IMG') {
+                // Just update the source
                 preview.src = e.target.result;
             } else {
-                // Replace div with img
+                // If preview is a div (placeholder), replace it with img tag
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.className = 'rounded-circle mb-3';
@@ -153,12 +194,16 @@ function previewPhoto(input) {
             }
         };
         
+        // Read the file as a data URL (converts image to text that can be shown in img tag)
         reader.readAsDataURL(input.files[0]);
     }
 }
 </script>
 
 <?php
+// Save HTML to $content variable
 $content = ob_get_clean();
+
+// Include base layout
 include __DIR__ . '/../layouts/base.php';
 ?>
