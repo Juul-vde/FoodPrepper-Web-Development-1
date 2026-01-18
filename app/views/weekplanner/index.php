@@ -46,7 +46,7 @@ ob_start();
                     </thead>
                     <tbody>
                         <?php foreach ($meals as $meal): ?>
-                            <tr>
+                            <tr class="meal-row" data-recipe-id="<?php echo htmlspecialchars($meal['recipe_id'] ?? ''); ?>" style="cursor: pointer;" title="Double-click to view recipe">
                                 <td><?php echo htmlspecialchars($meal['day_of_week'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($meal['meal_type'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($meal['recipe_title'] ?? 'Unknown'); ?></td>
@@ -68,6 +68,36 @@ ob_start();
         </div>
     </div>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add double-click handler to meal rows
+    const mealRows = document.querySelectorAll('.meal-row');
+    
+    mealRows.forEach(row => {
+        row.addEventListener('dblclick', function(e) {
+            // Don't trigger if clicking on buttons/forms in the Actions column
+            if (e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+            
+            const recipeId = this.getAttribute('data-recipe-id');
+            if (recipeId) {
+                window.location.href = '/recipe/view?id=' + recipeId;
+            }
+        });
+        
+        // Add hover effect
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+</script>
 
 <?php
 $content = ob_get_clean();

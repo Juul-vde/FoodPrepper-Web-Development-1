@@ -71,7 +71,6 @@ ob_start();
                     <h5>Account Actions</h5>
                 </div>
                 <div class="card-body">
-                    <a href="/profile/edit" class="btn btn-warning">Edit Profile</a>
                     <a href="/auth/logout" class="btn btn-danger">Logout</a>
                 </div>
             </div>

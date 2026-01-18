@@ -69,4 +69,11 @@ class ShoppingListItemRepository extends BaseRepository
         $sql = "DELETE FROM {$this->table} WHERE shopping_list_id = :shopping_list_id";
         return $this->execute($sql, [':shopping_list_id' => $shoppingListId])->rowCount();
     }
+
+    public function delete($itemId)
+    {
+        $sql = "DELETE FROM {$this->table} WHERE id = :id";
+        $stmt = $this->execute($sql, [':id' => $itemId]);
+        return $stmt->rowCount() > 0;
+    }
 }

@@ -87,6 +87,11 @@ class ShoppingListService
         return $this->shoppingListRepository->getShoppingListWithItems($shoppingListId);
     }
 
+    public function getShoppingListByWeeklyPlan($weeklyPlanId)
+    {
+        return $this->shoppingListRepository->findByWeeklyPlanId($weeklyPlanId);
+    }
+
     public function getUserShoppingLists($userId)
     {
         return $this->shoppingListRepository->findByUserId($userId);
@@ -121,6 +126,15 @@ class ShoppingListService
     {
         $this->shoppingListItemRepository->deleteByShoppingListId($shoppingListId);
         return $this->shoppingListRepository->delete($shoppingListId);
+    }
+
+    public function deleteItem($itemId)
+    {
+        $result = $this->shoppingListItemRepository->delete($itemId);
+        if (!$result) {
+            throw new \Exception("Failed to delete item. Item may not exist.");
+        }
+        return $result;
     }
 
     public function getCheckProgress($shoppingListId)

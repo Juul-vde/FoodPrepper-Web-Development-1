@@ -29,9 +29,11 @@ class UserService
         $userModel = new User();
         $userModel->setId($userId);
         $userModel->setName($name);
+        $userModel->setEmail($user['email']); // Preserve existing email
         $userModel->setProfilePhoto($profilePhoto ?? $user['profile_photo']);
         $userModel->setDietaryPreferences($dietaryPreferences ?? $user['dietary_preferences']);
         $userModel->setAllergies($allergies ?? $user['allergies']);
+        $userModel->setIsAdmin($user['is_admin'] ?? 0); // Preserve admin status
 
         return $this->userRepository->update($userModel);
     }

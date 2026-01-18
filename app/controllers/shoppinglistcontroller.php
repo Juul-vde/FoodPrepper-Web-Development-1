@@ -34,7 +34,16 @@ class shoppinglistcontroller
             $items = [];
             $progress = ['total' => 0, 'checked' => 0, 'percentage' => 0];
         } else {
-            $shoppingListId = $this->shoppingListService->generateShoppingList($userId, $weeklyPlan['id']);
+            // Check if shopping list exists, if not, create it
+            $existingList = $this->shoppingListService->getShoppingListByWeeklyPlan($weeklyPlan['id']);
+            
+            if (!$existingList) {
+                // Generate new shopping list
+                $shoppingListId = $this->shoppingListService->generateShoppingList($userId, $weeklyPlan['id']);
+            } else {
+                $shoppingListId = $existingList['id'];
+            }
+            
             $shoppingList = $this->shoppingListService->getShoppingList($shoppingListId);
             $items = $this->shoppingListService->getShoppingListItems($shoppingListId);
             $progress = $this->shoppingListService->getCheckProgress($shoppingListId);
@@ -70,11 +79,12 @@ class shoppinglistcontroller
         }
     }
 
-    public function toggleItem()
+    public function toggleitem()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
-            return;
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
         }
 
         try {
@@ -86,12 +96,14 @@ class shoppinglistcontroller
 
             $this->shoppingListService->toggleItemChecked($itemId);
 
-            $_SESSION['success'] = "Item status updated";
-            header('Location: /shoppinglist/index');
+            // Always return JSON for this endpoint (used by AJAX)
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
             exit;
         } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /shoppinglist/index');
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             exit;
         }
     }
@@ -128,13 +140,23 @@ class shoppinglistcontroller
     {
         try {
             $userId = $_SESSION['user_id'];
-            $weeklyPlan = $this->weeklyPlanService->getCurrentWeekPlan($userId);
-
-            if (!$weeklyPlan) {
-                throw new \Exception("No weekly plan found");
+            
+            // Get shopping list ID from URL parameter
+            $shoppingListId = $_GET['id'] ?? null;
+            
+            if (!$shoppingListId) {
+                // Fallback: get current weekly plan's shopping list
+                $weeklyPlan = $this->weeklyPlanService->getCurrentWeekPlan($userId);
+                if (!$weeklyPlan) {
+                    throw new \Exception("No weekly plan found");
+                }
+                $shoppingList = $this->shoppingListService->getShoppingListByWeeklyPlan($weeklyPlan['id']);
+                if (!$shoppingList) {
+                    throw new \Exception("No shopping list found");
+                }
+                $shoppingListId = $shoppingList['id'];
             }
 
-            $shoppingListId = $this->shoppingListService->generateShoppingList($userId, $weeklyPlan['id']);
             $text = $this->shoppingListService->exportAsText($shoppingListId);
 
             header('Content-Type: text/plain');
@@ -152,5 +174,31 @@ class shoppinglistcontroller
     {
         // Alias for export to support both naming conventions
         $this->export();
+    }
+
+    public function deleteitem()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            return;
+        }
+
+        try {
+            $itemId = $_POST['item_id'] ?? null;
+
+            if (!$itemId) {
+                throw new \Exception("Item ID is required");
+            }
+
+            $this->shoppingListService->deleteItem($itemId);
+
+            $_SESSION['success'] = "Item deleted successfully";
+            header('Location: /shoppinglist/index');
+            exit;
+        } catch (\Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /shoppinglist/index');
+            exit;
+        }
     }
 }

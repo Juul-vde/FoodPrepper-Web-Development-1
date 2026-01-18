@@ -74,7 +74,7 @@ ob_start();
                 </div>
                 <div class="card-body">
                     <div class="recipe-instructions">
-                        <ul class="list-unstyled">
+                        <ol class="ps-3">
                             <?php 
                             $instructions = $recipe['instructions'] ?? '';
                             
@@ -89,7 +89,7 @@ ob_start();
                                     </li>
                                 <?php endif; ?>
                             <?php endforeach; ?>
-                        </ul>
+                        </ol>
                     </div>
                 </div>
             </div>
