@@ -2,6 +2,8 @@
 // View file for week planner main page
 // Shows all meals planned for the week in a table
 
+use App\Services\CsrfService;
+
 // Set page title
 $pageTitle = 'Week Planner';
 
@@ -78,10 +80,7 @@ ob_start();
                                     <form method="POST" action="/weekplanner/removemeal" class="form-inline">
                                         <!-- CSRF Protection Token -->
                                         <!-- Prevents hackers from removing meals without permission -->
-                                        <?php 
-                                        use App\Services\CsrfService; 
-                                        echo CsrfService::getTokenField(); 
-                                        ?>
+                                        <?php echo CsrfService::getTokenField(); ?>
                                         <!-- Hidden field with meal ID -->
                                         <input type="hidden" name="item_id" value="<?php echo htmlspecialchars($meal['item_id']); ?>">
                                         <!-- Remove button with confirmation -->

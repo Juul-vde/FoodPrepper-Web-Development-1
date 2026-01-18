@@ -41,12 +41,14 @@ ob_start();
                         <?php if (isset($user['profile_photo']) && $user['profile_photo']): ?>
                             <!-- Show existing photo -->
                             <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" 
-                                 class="rounded-circle mb-3 profile-photo" 
-                                 id="profilePhotoPreview">
+                                 class="rounded-circle mb-3" 
+                                 id="profilePhotoPreview"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
                         <?php else: ?>
                             <!-- Show placeholder if no photo -->
-                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3 profile-photo-placeholder" 
-                                 id="profilePhotoPreview">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" 
+                                 id="profilePhotoPreview"
+                                 style="width: 150px; height: 150px;">
                                 <span class="text-muted">No Photo</span>
                             </div>
                         <?php endif; ?>

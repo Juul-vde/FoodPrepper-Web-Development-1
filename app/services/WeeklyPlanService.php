@@ -107,17 +107,25 @@ class WeeklyPlanService
     }
 
     // Update an existing meal
-    // Can change the day, meal type, or number of servings
-    public function updateMeal($itemId, $dayOfWeek, $mealType, $servings)
+    // Can change the recipe, day, meal type, or number of servings
+    public function updateMeal($itemId, $recipeId, $dayOfWeek, $mealType, $servings)
     {
         // Create item with new values
         $item = new WeeklyPlanItem();
         $item->setId($itemId);
+        $item->setRecipeId($recipeId);
         $item->setDayOfWeek($dayOfWeek);
         $item->setMealType($mealType);
         $item->setServings($servings);
 
         return $this->weeklyPlanItemRepository->update($item);
+    }
+
+    // Get a specific meal by ID
+    // Returns meal details including recipe information
+    public function getMealById($mealId)
+    {
+        return $this->weeklyPlanItemRepository->findById($mealId);
     }
 
     // Remove a meal from the weekly plan

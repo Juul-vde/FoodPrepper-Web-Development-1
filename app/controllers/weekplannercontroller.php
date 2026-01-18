@@ -224,6 +224,94 @@ class weekplannercontroller
         }
     }
 
+    // Show edit form for a meal
+    public function edit()
+    {
+        try {
+            // Get meal ID from URL
+            $mealId = $_GET['meal_id'] ?? null;
+            
+            // Check if ID is provided
+            if (!$mealId) {
+                throw new \Exception("Meal ID is required");
+            }
+
+            // Get meal details
+            $mealItem = $this->weeklyPlanService->getMealById($mealId);
+            
+            // Check if meal exists
+            if (!$mealItem) {
+                throw new \Exception("Meal not found");
+            }
+
+            // Get all recipes for dropdown
+            $recipes = $this->recipeService->getAllRecipes();
+
+            // Load the edit page
+            include __DIR__ . '/../views/weekplanner/edit.php';
+            
+        } catch (\Exception $e) {
+            // Show error message
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /weekplanner/index');
+            exit;
+        }
+    }
+
+    // Update a meal in the weekly plan
+    public function update()
+    {
+        // Check if form was submitted
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            return;
+        }
+
+        try {
+            // Check security token
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!CsrfService::validateToken($csrfToken)) {
+                throw new \Exception("Invalid security token. Please try again.");
+            }
+            
+            // Get form data
+            $itemId = $_POST['item_id'] ?? null;
+            $recipeId = $_POST['recipe_id'] ?? null;
+            $dayOfWeek = $_POST['day_of_week'] ?? null;
+            $mealType = $_POST['meal_type'] ?? null;
+            $servings = $_POST['servings'] ?? 1;
+
+            // Check required fields
+            if (!$itemId || !$recipeId || !$dayOfWeek || !$mealType) {
+                throw new \Exception("All fields are required");
+            }
+
+            // Check if day is valid
+            if (!is_numeric($dayOfWeek) || $dayOfWeek < 1 || $dayOfWeek > 7) {
+                throw new \Exception("Invalid day of week");
+            }
+
+            // Check if servings is valid
+            if (!is_numeric($servings) || $servings < 1 || $servings > 20) {
+                throw new \Exception("Servings must be between 1 and 20");
+            }
+
+            // Update the meal
+            $this->weeklyPlanService->updateMeal($itemId, $recipeId, $dayOfWeek, $mealType, $servings);
+
+            // Show success message
+            $_SESSION['success'] = "Meal updated successfully";
+            header('Location: /weekplanner/index');
+            exit;
+            
+        } catch (\Exception $e) {
+            // Show error message
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /weekplanner/index');
+            exit;
+        }
+    }
+
     // Helper function to organize meals by day
     private function organizeMealsByDay($mealsData)
     {

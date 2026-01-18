@@ -2,6 +2,8 @@
 // View file for editing a meal in the week planner
 // This page allows changing the day, meal type, or servings for a planned meal
 
+use App\Services\CsrfService;
+
 // Set page title
 $pageTitle = 'Edit Meal';
 
@@ -30,13 +32,25 @@ ob_start();
                     <!-- Edit form - sends data to /weekplanner/update -->
                     <form method="POST" action="/weekplanner/update">
                         <!-- Hidden field - sends meal ID without showing it -->
-                        <input type="hidden" name="item_id" value="<?php echo htmlspecialchars($mealItem['item_id']); ?>">
+                        <input type="hidden" name="item_id" value="<?php echo htmlspecialchars($mealItem['id'] ?? ''); ?>">
+                        
+                        <!-- CSRF security token -->
+                        <?php echo CsrfService::getTokenField(); ?>
 
-                        <!-- Recipe name (disabled - can't change recipe) -->
+                        <!-- Recipe selection dropdown -->
                         <div class="mb-3">
-                            <label for="recipe_title" class="form-label">Recipe</label>
-                            <!-- disabled means user can see but not edit this field -->
-                            <input type="text" class="form-control" id="recipe_title" value="<?php echo htmlspecialchars($mealItem['recipe_title'] ?? 'Unknown'); ?>" disabled>
+                            <label for="recipe_id" class="form-label">Recipe <span class="text-danger">*</span></label>
+                            <select class="form-select" id="recipe_id" name="recipe_id" required>
+                                <option value="">Select a recipe...</option>
+                                <?php if (isset($recipes) && is_array($recipes)): ?>
+                                    <?php foreach ($recipes as $recipe): ?>
+                                        <option value="<?php echo htmlspecialchars($recipe['id'] ?? ''); ?>" 
+                                            <?php echo (isset($mealItem['recipe_id']) && $mealItem['recipe_id'] == $recipe['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($recipe['title'] ?? 'Unknown Recipe'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </div>
 
                         <!-- Day of week dropdown -->

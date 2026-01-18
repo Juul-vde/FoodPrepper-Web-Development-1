@@ -7,19 +7,6 @@
    GENERAL UTILITY STYLES
    ================================================ */
 
-/* Profile photo styling */
-.profile-photo {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-}
-
-/* Profile photo placeholder */
-.profile-photo-placeholder {
-    width: 150px;
-    height: 150px;
-}
-
 /* Inline form (for buttons next to each other) */
 .form-inline {
     display: inline;

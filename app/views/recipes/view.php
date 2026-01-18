@@ -259,52 +259,6 @@ ob_start();
 </div>
 <?php endif; ?>
 
-<?php
-// Save HTML to $content variable
-$content = ob_get_clean();
-
-// Include base layout
-include __DIR__ . '/../layouts/base.php';
-?>
-                        </div>
-                    <?php else: ?>
-                        <!-- Recipe not in weekplanner -->
-                        <div class="card-body">
-                            <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addToWeekplanModal">
-                                📅 Add to Weekplanner
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-<?php else: ?>
-    <div class="alert alert-warning">
-        <p>Recipe not found.</p>
-    </div>
-<?php endif; ?>
-
-<style>
-    .recipe-instructions {
-        line-height: 1.8;
-    }
-    
-    .sticky-top {
-        position: sticky;
-        top: 20px;
-        z-index: 10;
-    }
-    
-    @media (max-width: 768px) {
-        .sticky-top {
-            position: relative;
-            top: auto;
-        }
-    }
-</style>
-
 <!-- Add to Weekplanner Modal -->
 <?php if (isset($_SESSION['user_id']) && (!isset($recipeInWeekplan) || count($recipeInWeekplan) == 0)): ?>
 <div class="modal fade" id="addToWeekplanModal" tabindex="-1">

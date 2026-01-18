@@ -154,4 +154,44 @@ class shoppinglistcontroller
             exit;
         }
     }
+    
+    // Delete an item from the shopping list
+    public function deleteitem()
+    {
+        // Check if form was submitted
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            return;
+        }
+
+        try {
+            // Check security token
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!CsrfService::validateToken($csrfToken)) {
+                throw new \Exception("Invalid security token. Please try again.");
+            }
+            
+            // Get item ID from form
+            $itemId = $_POST['item_id'] ?? null;
+
+            // Check if item ID is provided
+            if (!$itemId) {
+                throw new \Exception("Item ID is required");
+            }
+
+            // Delete the item
+            $this->shoppingListService->deleteItem($itemId);
+
+            // Show success message
+            $_SESSION['success'] = "Item deleted from shopping list";
+            header('Location: /shoppinglist/index');
+            exit;
+            
+        } catch (\Exception $e) {
+            // Show error message
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /shoppinglist/index');
+            exit;
+        }
+    }
 }

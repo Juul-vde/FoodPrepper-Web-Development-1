@@ -58,6 +58,7 @@ echo CsrfService::getTokenField();
                     <button type="button" class="btn btn-secondary" id="copyListBtn" onclick="copyShoppingListToClipboard()">📋 Copy List</button>
                     <!-- Regenerate button - creates new list from current week plan -->
                     <form method="POST" action="/shoppinglist/generate" class="form-inline">
+                        <?php echo CsrfService::getTokenField(); ?>
                         <button type="submit" class="btn btn-primary" onclick="return confirm('This will regenerate the shopping list from your current weekly plan. Continue?');">🔄 Regenerate</button>
                     </form>
                 </div>
@@ -107,6 +108,7 @@ echo CsrfService::getTokenField();
                                 <td>
                                     <!-- Delete button form -->
                                     <form method="POST" action="/shoppinglist/deleteitem" class="form-inline">
+                                        <?php echo CsrfService::getTokenField(); ?>
                                         <!-- Hidden field with item ID -->
                                         <input type="hidden" name="item_id" value="<?php echo htmlspecialchars($item['id']); ?>">
                                         <!-- Delete button with confirmation -->
@@ -360,123 +362,5 @@ function downloadShoppingList() {
 $content = ob_get_clean();
 
 // Include base layout
-include __DIR__ . '/../layouts/base.php';
-?>
-            return; // Skip this item
-        }
-        
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 4) {
-            const ingredient = cells[1].textContent.trim();
-            const quantity = cells[2].textContent.trim();
-            const unit = cells[3].textContent.trim();
-            
-            textList += `${ingredient} - ${quantity} ${unit}\n`;
-        }
-    });
-    
-    // Try modern clipboard API first
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textList)
-            .then(() => {
-                const btn = document.getElementById('copyListBtn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ Copied!';
-                btn.classList.remove('btn-secondary');
-                btn.classList.add('btn-success');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-secondary');
-                }, 2000);
-            })
-            .catch(err => {
-                console.error('Failed to copy:', err);
-                alert('Failed to copy to clipboard. Please try again.');
-            });
-    } else {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = textList;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            const btn = document.getElementById('copyListBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '✅ Copied!';
-            btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-success');
-            
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-secondary');
-            }, 2000);
-        } catch (err) {
-            console.error('Fallback copy failed:', err);
-            alert('Failed to copy to clipboard');
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    }
-}
-
-// Function to download shopping list as text file (excludes checked items)
-function downloadShoppingList() {
-    const rows = document.querySelectorAll('table tbody tr');
-    let textList = '🛒 Shopping List\n\n';
-    
-    rows.forEach(row => {
-        // Skip checked items
-        const checkbox = row.querySelector('.shopping-item-checkbox');
-        if (checkbox && checkbox.checked) {
-            return; // Skip this item
-        }
-        
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 4) {
-            const ingredient = cells[1].textContent.trim();
-            const quantity = cells[2].textContent.trim();
-            const unit = cells[3].textContent.trim();
-            
-            textList += `${ingredient} - ${quantity} ${unit}\n`;
-        }
-    });
-    
-    // Create a blob and download it
-    const blob = new Blob([textList], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'shopping-list.txt';
-    document.body.appendChild(a);
-    a.click();
-    
-    // Cleanup
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    // Visual feedback
-    const btn = document.getElementById('downloadListBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '✅ Downloaded!';
-    btn.classList.remove('btn-secondary');
-    btn.classList.add('btn-success');
-    
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.classList.remove('btn-success');
-        btn.classList.add('btn-secondary');
-    }, 2000);
-}
-</script>
-
-<?php
-$content = ob_get_clean();
 include __DIR__ . '/../layouts/base.php';
 ?>

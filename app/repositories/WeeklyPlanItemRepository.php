@@ -33,16 +33,30 @@ class WeeklyPlanItemRepository extends BaseRepository
     // Update existing meal item
     public function update(WeeklyPlanItem $item)
     {
-        // Update day, meal type, and servings
-        $sql = "UPDATE {$this->table} SET day_of_week = :day_of_week, meal_type = :meal_type, servings = :servings WHERE id = :id";
+        // Update recipe, day, meal type, and servings
+        $sql = "UPDATE {$this->table} SET recipe_id = :recipe_id, day_of_week = :day_of_week, meal_type = :meal_type, servings = :servings WHERE id = :id";
         
         // Return true if rows were changed
         return $this->execute($sql, [
             ':id' => $item->getId(),
+            ':recipe_id' => $item->getRecipeId(),
             ':day_of_week' => $item->getDayOfWeek(),
             ':meal_type' => $item->getMealType(),
             ':servings' => $item->getServings()
         ])->rowCount() > 0;
+    }
+
+    // Get a specific meal item by ID
+    public function findById($itemId)
+    {
+        // Join with recipes to get recipe details
+        $sql = "SELECT wpi.*, r.title as recipe_title, r.image_url, r.prep_time, r.cook_time 
+                FROM {$this->table} wpi
+                LEFT JOIN recipes r ON wpi.recipe_id = r.id
+                WHERE wpi.id = :id";
+        
+        $stmt = $this->execute($sql, [':id' => $itemId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     // Get all meals for a weekly plan
